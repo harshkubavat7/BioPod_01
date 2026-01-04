@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-
+const aiRoutes = require("./routes/ai.routes");
 const app = express();
 
 /* ================= MIDDLEWARE ================= */
@@ -33,7 +33,7 @@ app.use("/api/feed", require("./routes/feed.routes"));
 app.use("/api/aira", require("./routes/aira.routes"));
 app.use("/api/location", require("./routes/location.routes"));
 app.use("/api/ai/insights", require("./routes/insights.routes"));
-
+app.use("/api/ai", aiRoutes);
 
 
 
