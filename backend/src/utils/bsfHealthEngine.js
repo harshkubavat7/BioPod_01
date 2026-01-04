@@ -4,19 +4,19 @@
 const STAGE_RANGES = {
   Egg: {
     temperature: [26, 30],
-    humidity: [65, 80],
+    humidity: [45, 70],
     air: [500, 900],
     feedWeight: 0,
   },
   Larva: {
     temperature: [27, 32],
-    humidity: [60, 75],
+    humidity: [45, 70],
     air: [600, 900],
     feedWeight: 0.25,
   },
   Pupa: {
     temperature: [24, 30],
-    humidity: [50, 65],
+    humidity: [45, 65],
     air: [500, 1000],
     feedWeight: 0.1,
   },
@@ -64,8 +64,8 @@ exports.calculateBSFHealth = ({
 
   // EXPLAINABLE INSIGHTS
   const insights = [];
-  if (humScore < 60) insights.push("Humidity too low → dehydration risk");
-  if (humScore > 90) insights.push("High humidity → mold risk");
+  if (humScore < 45) insights.push("Humidity too low → dehydration risk");
+  if (humScore > 70) insights.push("High humidity → mold risk");
   if (tempScore < 60) insights.push("Temperature stress detected");
   if (airScore < 60) insights.push("Poor air quality → oxygen stress");
   if (feedScore < 60) insights.push("Insufficient feed → slow growth");

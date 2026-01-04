@@ -235,38 +235,97 @@ export default function KPICards() {
 
 /* ================= SINGLE KPI CARD ================= */
 
+// function KpiCard({ label, value, unit, ai, onClick }) {
+//   return (
+//     <div onClick={onClick} className="relative cursor-pointer group">
+//       <div
+//         className="absolute -inset-1 rounded-2xl blur-xl opacity-40 group-hover:opacity-70"
+//         style={{ backgroundColor: ai.color }}
+//       />
+
+//       <div className="relative bg-zinc-900/80 backdrop-blur border border-zinc-800
+//                       rounded-2xl p-5 h-[260px]
+//                       flex flex-col items-center justify-between transition">
+//         <p className="text-sm text-zinc-400">{label}</p>
+
+//         <div className="w-24 h-24">
+//           <CircularProgressbar
+//             value={ai.percent}
+//             text={value !== undefined && value !== null ? `${value}${unit}` : "--"}
+//             styles={buildStyles({
+//               pathColor: ai.color,
+//               trailColor: "#27272a",
+//               textColor: "#e5e7eb",
+//               filter: `drop-shadow(0 0 10px ${ai.color})`,
+//             })}
+//           />
+//         </div>
+
+//         <p className="text-sm font-semibold" style={{ color: ai.color }}>
+//           {ai.status}
+//         </p>
+
+//         <p className="text-xs text-zinc-500">Click for details</p>
+//       </div>
+//     </div>
+//   );
+// }
+
+
 function KpiCard({ label, value, unit, ai, onClick }) {
   return (
-    <div onClick={onClick} className="relative cursor-pointer group">
+    <div
+      onClick={onClick}
+      className="relative cursor-pointer group"
+    >
+      {/* Glow */}
       <div
-        className="absolute -inset-1 rounded-2xl blur-xl opacity-40 group-hover:opacity-70"
+        className="absolute -inset-1 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition"
         style={{ backgroundColor: ai.color }}
       />
 
       <div className="relative bg-zinc-900/80 backdrop-blur border border-zinc-800
                       rounded-2xl p-5 h-[260px]
-                      flex flex-col items-center justify-between transition">
+                      flex flex-col items-center justify-between
+                      transition hover:scale-[1.02]">
+        
+        {/* Title */}
         <p className="text-sm text-zinc-400">{label}</p>
 
+        {/* Gauge */}
         <div className="w-24 h-24">
           <CircularProgressbar
             value={ai.percent}
-            text={value !== undefined && value !== null ? `${value}${unit}` : "--"}
+            text={
+              value !== undefined && value !== null
+                ? `${value}${unit}`
+                : "--"
+            }
             styles={buildStyles({
               pathColor: ai.color,
               trailColor: "#27272a",
               textColor: "#e5e7eb",
-              filter: `drop-shadow(0 0 10px ${ai.color})`,
+              textSize: "18px",
+              pathTransitionDuration: 0.6,
             })}
           />
         </div>
 
-        <p className="text-sm font-semibold" style={{ color: ai.color }}>
-          {ai.status}
-        </p>
-
-        <p className="text-xs text-zinc-500">Click for details</p>
+        {/* Status */}
+        <div className="text-center space-y-1">
+          <p
+            className="text-sm font-semibold"
+            style={{ color: ai.color }}
+          >
+            {ai.status}
+          </p>
+          <p className="text-[11px] text-zinc-500">
+            Click for details
+          </p>
+        </div>
       </div>
     </div>
   );
 }
+
+

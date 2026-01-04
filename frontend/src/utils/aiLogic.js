@@ -76,31 +76,47 @@ export function evaluateMetric(type, value) {
       status: "Unknown",
       color: "#71717a",
       percent: 0,
-      insight: "No data available",
-      action: "Waiting for sensor data",
+      insight: "Sensor data not available",
+      action: "Check sensor connectivity",
     };
   }
 
-  if (type === "health") {
-    if (value >= 85)
-      return out("Excellent", "#22c55e", value, "BSF conditions optimal", "Maintain setup");
+  switch (type) {
+    case "temperature":
+      if (value < 25)
+        return out("Risk", "#ef4444", value, "Too cold for BSF metabolism", "Increase temperature");
+      if (value <= 32)
+        return out("Excellent", "#22c55e", value, "Optimal temperature for BSF growth", "No action needed");
+      return out("Risk", "#ef4444", value, "Excess heat stress", "Improve ventilation");
 
-    if (value >= 65)
-      return out("Good", "#facc15", value, "Minor stress detected", "Monitor closely");
+    case "humidity":
+      if (value < 45)
+        return out("Risk", "#ef4444", value, "Low humidity → dehydration risk", "Increase moisture");
+      if (value <= 70)
+        return out("Good", "#facc15", value, "Acceptable humidity for BSF", "Monitor regularly");
+      return out("Risk", "#ef4444", value, "High humidity → mold risk", "Increase airflow");
 
-    return out("Risk", "#ef4444", value, "Unhealthy growth conditions", "Immediate correction required");
+    case "air":
+      if (value < 800)
+        return out("Excellent", "#22c55e", value, "Fresh air conditions", "No action needed");
+      if (value <= 1200)
+        return out("Good", "#facc15", value, "Moderate air quality", "Ensure ventilation");
+      return out("Risk", "#ef4444", value, "Poor air quality", "Ventilation required");
+
+    case "health":
+      if (value >= 80)
+        return out("Excellent", "#22c55e", value, "BSF growth is healthy", "Maintain conditions");
+      if (value >= 60)
+        return out("Good", "#facc15", value, "Minor stress detected", "Monitor closely");
+      return out("Risk", "#ef4444", value, "Unhealthy BSF environment", "Immediate action required");
+
+    default:
+      return out("Info", "#38bdf8", value, "Live sensor reading", "Refer health score");
   }
-
-  // Raw sensor display only
-  return {
-    status: "Info",
-    color: "#38bdf8",
-    percent: 100,
-    insight: "Live sensor reading",
-    action: "Refer health score",
-  };
 }
 
 function out(status, color, percent, insight, action) {
   return { status, color, percent, insight, action };
 }
+
+
