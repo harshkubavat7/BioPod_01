@@ -206,249 +206,323 @@
 
 
 
-const Sensor = require("../models/SensorData.model");
+// const Sensor = require("../models/SensorData.model");
+// const BSFBatch = require("../models/BSFBatch");
+// const Feed = require("../models/FeedRecord.model");
+// const { calculateBSFHealth } = require("../utils/bsfHealthEngine");
+
+// /* ===============================
+//    INTENT DETECTION
+// ================================ */
+
+// function detectIntent(message) {
+//   const msg = message.toLowerCase();
+
+//   if (msg.includes("status") || msg.includes("health"))
+//     return "SYSTEM_STATUS";
+
+//   if (msg.includes("temp"))
+//     return "TEMP_STATUS";
+
+//   if (msg.includes("humidity"))
+//     return "HUMIDITY_STATUS";
+
+//   if (msg.includes("air"))
+//     return "AIR_STATUS";
+
+//   if (msg.includes("why"))
+//     return "WHY_ISSUE";
+
+//   if (msg.includes("feed"))
+//     return "FEED_ADVICE";
+
+//   if (msg.includes("what should i do") || msg.includes("action"))
+//     return "ACTION_GUIDE";
+
+//   return "UNKNOWN";
+// }
+
+// /* ===============================
+//    MAIN CHAT CONTROLLER
+// ================================ */
+
+// exports.chatWithAira = async (req, res) => {
+//   try {
+//     const userMessage = (req.body.message || "").trim().toLowerCase();
+
+//     /* ---------- BASIC GUARD ---------- */
+//     if (!userMessage) {
+//       return res.json({
+//         reply: "Please ask a question about temperature, humidity, health, or feed.",
+//       });
+//     }
+
+//     /* ---------- COLLECT LIVE CONTEXT ---------- */
+//     const sensor = await Sensor.findOne().sort({ createdAt: -1 });
+//     const batch = await BSFBatch.findOne({ device_id: "BSF_001" });
+
+//     if (!sensor || !batch) {
+//       return res.json({
+//         reply:
+//           "⚠️ I don’t have enough live data yet. Please wait for sensors to stabilize.",
+//       });
+//     }
+
+//     const ageDays = Math.floor(
+//       (Date.now() - batch.started_on) / (1000 * 60 * 60 * 24)
+//     );
+
+//     const feedAgg = await Feed.aggregate([
+//       { $match: { type: "input" } },
+//       { $group: { _id: null, total: { $sum: "$quantity" } } },
+//     ]);
+
+//     const feedKg = feedAgg[0]?.total || 0;
+
+//     /* ---------- SINGLE HEALTH SNAPSHOT ---------- */
+//     const health = calculateBSFHealth({
+//       sensor,
+//       feedKg,
+//       ageDays,
+//     });
+
+//     const intent = detectIntent(userMessage);
+
+//     /* ===============================
+//        INTENT HANDLERS
+//     ================================ */
+
+//     /* ---- SYSTEM STATUS ---- */
+//     if (intent === "SYSTEM_STATUS") {
+//       return res.json({
+//         reply:
+//           `🪱 BSF Stage: ${health.stage}\n` +
+//           `❤️ Health Score: ${health.health_score}%\n` +
+//           (health.insights.length
+//             ? `⚠️ Issues:\n${health.insights.map(i => "• " + i).join("\n")}`
+//             : "✅ No critical stress detected."),
+//       });
+//     }
+
+//     /* ---- TEMPERATURE ---- */
+//     if (intent === "TEMP_STATUS") {
+//       if (sensor.temperature < 26) {
+//         return res.json({
+//           reply:
+//             "🌡️ Temperature is low for BSF.\n" +
+//             "Effect: Slower metabolism and growth.\n" +
+//             "Action: Increase ambient warmth or reduce airflow.",
+//         });
+//       }
+
+//       if (sensor.temperature > 32) {
+//         return res.json({
+//           reply:
+//             "🌡️ Temperature is high.\n" +
+//             "Effect: Heat stress and mortality risk.\n" +
+//             "Action: Improve ventilation immediately.",
+//         });
+//       }
+
+//       return res.json({
+//         reply: "🌡️ Temperature is within the optimal range for BSF.",
+//       });
+//     }
+
+//     /* ---- HUMIDITY ---- */
+//     if (intent === "HUMIDITY_STATUS") {
+//       if (sensor.humidity < 45) {
+//         return res.json({
+//           reply:
+//             "💧 Humidity is low.\n" +
+//             "Effect: Dehydration risk for BSF.\n" +
+//             "Action: Add moist feed or lightly mist bedding.",
+//         });
+//       }
+
+//       if (sensor.humidity > 70) {
+//         return res.json({
+//           reply:
+//             "💧 Humidity is high.\n" +
+//             "Effect: Mold and anaerobic bacterial growth.\n" +
+//             "Action: Increase airflow and avoid over-wet feed.",
+//         });
+//       }
+
+//       return res.json({
+//         reply: "💧 Humidity is within the safe range (45–70%).",
+//       });
+//     }
+
+//     /* ---- AIR QUALITY ---- */
+//     if (intent === "AIR_STATUS") {
+//       if (sensor.air_quality > 1200) {
+//         return res.json({
+//           reply:
+//             "🌬️ Air quality is poor.\n" +
+//             "Effect: Oxygen stress and reduced BSF activity.\n" +
+//             "Action: Ensure fan or ventilation is active.",
+//         });
+//       }
+
+//       return res.json({
+//         reply: "🌬️ Air quality is acceptable for BSF.",
+//       });
+//     }
+
+//     /* ---- WHY QUESTIONS (PARAMETER-AWARE) ---- */
+//     if (intent === "WHY_ISSUE") {
+//       if (health.insights.length === 0) {
+//         return res.json({
+//           reply: "No specific stress detected. System is currently stable.",
+//         });
+//       }
+
+//       return res.json({
+//         reply:
+//           "I detected the following issue(s):\n" +
+//           health.insights.map(i => "• " + i).join("\n") +
+//           "\n\nRecommended action: Adjust conditions to optimal range.",
+//       });
+//     }
+
+//     /* ---- FEED ADVICE ---- */
+//     if (intent === "FEED_ADVICE") {
+//       if (health.stage === "Egg") {
+//         return res.json({
+//           reply:
+//             "🥚 Egg stage does not require feeding.\n" +
+//             "Focus on stable humidity (45–70%) and temperature.",
+//         });
+//       }
+
+//       if (health.stage === "Larva") {
+//         return res.json({
+//           reply:
+//             "🐛 Larval stage feeding advice:\n" +
+//             "• Moist vegetable waste\n" +
+//             "• Fruit pulp or kitchen scraps\n" +
+//             "• Small daily portions to avoid overheating",
+//         });
+//       }
+
+//       if (health.stage === "Pupa") {
+//         return res.json({
+//           reply:
+//             "🟤 Pupa stage should NOT be fed.\n" +
+//             "Avoid moisture and disturbance.",
+//         });
+//       }
+//     }
+
+//     /* ---- ACTION GUIDE ---- */
+//     if (intent === "ACTION_GUIDE") {
+//       if (health.insights.length === 0) {
+//         return res.json({
+//           reply: "Everything looks stable. No immediate action required.",
+//         });
+//       }
+
+//       return res.json({
+//         reply:
+//           "Recommended actions based on current stress:\n" +
+//           health.insights.map(i => "• Address: " + i).join("\n"),
+//       });
+//     }
+
+//     /* ---- PROACTIVE WARNING ---- */
+//     if (health.predicted_delay_days > 0) {
+//       return res.json({
+//         reply:
+//           `⚠️ Current stress may delay harvest by ~${health.predicted_delay_days} day(s).\n` +
+//           health.insights.map(i => "• " + i).join("\n"),
+//       });
+//     }
+
+//     /* ---- DEFAULT ---- */
+//     return res.json({
+//       reply:
+//         "🤖 I’m monitoring BSF growth in real time.\n" +
+//         "You can ask about temperature, humidity, air quality, health, or feeding.",
+//     });
+//   } catch (err) {
+//     console.error("❌ AIRA ERROR:", err);
+//     return res.status(500).json({
+//       reply: "❌ I encountered an internal error while analyzing the system.",
+//     });
+//   }
+// };
+
+
+const { askGeminiBSF } = require("../services/gemini.service");
 const BSFBatch = require("../models/BSFBatch");
-const Feed = require("../models/FeedRecord.model");
-const { calculateBSFHealth } = require("../utils/bsfHealthEngine");
+const { detectStage } = require("../utils/bsfHealthEngine");
 
-/* ===============================
-   INTENT DETECTION
-================================ */
-
-function detectIntent(message) {
-  const msg = message.toLowerCase();
-
-  if (msg.includes("status") || msg.includes("health"))
-    return "SYSTEM_STATUS";
-
-  if (msg.includes("temp"))
-    return "TEMP_STATUS";
-
-  if (msg.includes("humidity"))
-    return "HUMIDITY_STATUS";
-
-  if (msg.includes("air"))
-    return "AIR_STATUS";
-
-  if (msg.includes("why"))
-    return "WHY_ISSUE";
-
-  if (msg.includes("feed"))
-    return "FEED_ADVICE";
-
-  if (msg.includes("what should i do") || msg.includes("action"))
-    return "ACTION_GUIDE";
-
-  return "UNKNOWN";
+function isBSFQuery(text) {
+  const q = text.toLowerCase();
+  return (
+    q.includes("bsf") ||
+    q.includes("black soldier fly") ||
+    q.includes("larva") ||
+    q.includes("larvae") ||
+    q.includes("pupa") ||
+    q.includes("humidity") ||
+    q.includes("moisture") ||
+    q.includes("smell") ||
+    q.includes("odor") ||
+    q.includes("fungus") ||
+    q.includes("mold") ||
+    q.includes("temperature") ||
+    q.includes("feed") ||
+    q.includes("harvest") ||
+    q.includes("prevent") ||
+    q.includes("control") ||
+    q.includes("reduce")
+  );
 }
 
-/* ===============================
-   MAIN CHAT CONTROLLER
-================================ */
-
-exports.chatWithAira = async (req, res) => {
+const chatWithAira = async (req, res) => {
   try {
-    const userMessage = (req.body.message || "").trim().toLowerCase();
+    const { message, device_id = "BSF_001" } = req.body;
 
-    /* ---------- BASIC GUARD ---------- */
-    if (!userMessage) {
-      return res.json({
-        reply: "Please ask a question about temperature, humidity, health, or feed.",
-      });
+    if (!message) {
+      return res.status(400).json({ reply: "Message is required" });
     }
 
-    /* ---------- COLLECT LIVE CONTEXT ---------- */
-    const sensor = await Sensor.findOne().sort({ createdAt: -1 });
-    const batch = await BSFBatch.findOne({ device_id: "BSF_001" });
+    /* ---------- BSF → GEMINI ---------- */
+    if (isBSFQuery(message)) {
+      let context = "";
 
-    if (!sensor || !batch) {
-      return res.json({
-        reply:
-          "⚠️ I don’t have enough live data yet. Please wait for sensors to stabilize.",
-      });
+      const batch = await BSFBatch.findOne({ device_id });
+      if (batch?.started_on) {
+        const ageDays = Math.floor(
+          (Date.now() - new Date(batch.started_on)) / (1000 * 60 * 60 * 24)
+        );
+        const stage = detectStage(ageDays);
+
+        context = `
+BSF batch age: ${ageDays} days
+Current BSF stage: ${stage}
+`;
+      }
+
+      const reply = await askGeminiBSF(message, context);
+      return res.json({ reply });
     }
 
-    const ageDays = Math.floor(
-      (Date.now() - batch.started_on) / (1000 * 60 * 60 * 24)
-    );
-
-    const feedAgg = await Feed.aggregate([
-      { $match: { type: "input" } },
-      { $group: { _id: null, total: { $sum: "$quantity" } } },
-    ]);
-
-    const feedKg = feedAgg[0]?.total || 0;
-
-    /* ---------- SINGLE HEALTH SNAPSHOT ---------- */
-    const health = calculateBSFHealth({
-      sensor,
-      feedKg,
-      ageDays,
-    });
-
-    const intent = detectIntent(userMessage);
-
-    /* ===============================
-       INTENT HANDLERS
-    ================================ */
-
-    /* ---- SYSTEM STATUS ---- */
-    if (intent === "SYSTEM_STATUS") {
-      return res.json({
-        reply:
-          `🪱 BSF Stage: ${health.stage}\n` +
-          `❤️ Health Score: ${health.health_score}%\n` +
-          (health.insights.length
-            ? `⚠️ Issues:\n${health.insights.map(i => "• " + i).join("\n")}`
-            : "✅ No critical stress detected."),
-      });
-    }
-
-    /* ---- TEMPERATURE ---- */
-    if (intent === "TEMP_STATUS") {
-      if (sensor.temperature < 26) {
-        return res.json({
-          reply:
-            "🌡️ Temperature is low for BSF.\n" +
-            "Effect: Slower metabolism and growth.\n" +
-            "Action: Increase ambient warmth or reduce airflow.",
-        });
-      }
-
-      if (sensor.temperature > 32) {
-        return res.json({
-          reply:
-            "🌡️ Temperature is high.\n" +
-            "Effect: Heat stress and mortality risk.\n" +
-            "Action: Improve ventilation immediately.",
-        });
-      }
-
-      return res.json({
-        reply: "🌡️ Temperature is within the optimal range for BSF.",
-      });
-    }
-
-    /* ---- HUMIDITY ---- */
-    if (intent === "HUMIDITY_STATUS") {
-      if (sensor.humidity < 45) {
-        return res.json({
-          reply:
-            "💧 Humidity is low.\n" +
-            "Effect: Dehydration risk for BSF.\n" +
-            "Action: Add moist feed or lightly mist bedding.",
-        });
-      }
-
-      if (sensor.humidity > 70) {
-        return res.json({
-          reply:
-            "💧 Humidity is high.\n" +
-            "Effect: Mold and anaerobic bacterial growth.\n" +
-            "Action: Increase airflow and avoid over-wet feed.",
-        });
-      }
-
-      return res.json({
-        reply: "💧 Humidity is within the safe range (45–70%).",
-      });
-    }
-
-    /* ---- AIR QUALITY ---- */
-    if (intent === "AIR_STATUS") {
-      if (sensor.air_quality > 1200) {
-        return res.json({
-          reply:
-            "🌬️ Air quality is poor.\n" +
-            "Effect: Oxygen stress and reduced BSF activity.\n" +
-            "Action: Ensure fan or ventilation is active.",
-        });
-      }
-
-      return res.json({
-        reply: "🌬️ Air quality is acceptable for BSF.",
-      });
-    }
-
-    /* ---- WHY QUESTIONS (PARAMETER-AWARE) ---- */
-    if (intent === "WHY_ISSUE") {
-      if (health.insights.length === 0) {
-        return res.json({
-          reply: "No specific stress detected. System is currently stable.",
-        });
-      }
-
-      return res.json({
-        reply:
-          "I detected the following issue(s):\n" +
-          health.insights.map(i => "• " + i).join("\n") +
-          "\n\nRecommended action: Adjust conditions to optimal range.",
-      });
-    }
-
-    /* ---- FEED ADVICE ---- */
-    if (intent === "FEED_ADVICE") {
-      if (health.stage === "Egg") {
-        return res.json({
-          reply:
-            "🥚 Egg stage does not require feeding.\n" +
-            "Focus on stable humidity (45–70%) and temperature.",
-        });
-      }
-
-      if (health.stage === "Larva") {
-        return res.json({
-          reply:
-            "🐛 Larval stage feeding advice:\n" +
-            "• Moist vegetable waste\n" +
-            "• Fruit pulp or kitchen scraps\n" +
-            "• Small daily portions to avoid overheating",
-        });
-      }
-
-      if (health.stage === "Pupa") {
-        return res.json({
-          reply:
-            "🟤 Pupa stage should NOT be fed.\n" +
-            "Avoid moisture and disturbance.",
-        });
-      }
-    }
-
-    /* ---- ACTION GUIDE ---- */
-    if (intent === "ACTION_GUIDE") {
-      if (health.insights.length === 0) {
-        return res.json({
-          reply: "Everything looks stable. No immediate action required.",
-        });
-      }
-
-      return res.json({
-        reply:
-          "Recommended actions based on current stress:\n" +
-          health.insights.map(i => "• Address: " + i).join("\n"),
-      });
-    }
-
-    /* ---- PROACTIVE WARNING ---- */
-    if (health.predicted_delay_days > 0) {
-      return res.json({
-        reply:
-          `⚠️ Current stress may delay harvest by ~${health.predicted_delay_days} day(s).\n` +
-          health.insights.map(i => "• " + i).join("\n"),
-      });
-    }
-
-    /* ---- DEFAULT ---- */
+    /* ---------- FALLBACK ---------- */
     return res.json({
       reply:
-        "🤖 I’m monitoring BSF growth in real time.\n" +
-        "You can ask about temperature, humidity, air quality, health, or feeding.",
+        "I’m monitoring BSF growth in real time. You can ask about temperature, humidity, air quality, health, or feeding.",
     });
   } catch (err) {
-    console.error("❌ AIRA ERROR:", err);
+    console.error("❌ AIRA CHAT ERROR:", err);
     return res.status(500).json({
-      reply: "❌ I encountered an internal error while analyzing the system.",
+      reply: "AI service error",
     });
   }
+};
+
+module.exports = {
+  chatWithAira,
 };
