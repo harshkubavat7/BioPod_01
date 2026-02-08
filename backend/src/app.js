@@ -28,12 +28,14 @@ app.get("/", (req, res) => {
 /* ================= API ROUTES ================= */
 app.use("/api/fan", require("./routes/fan.routes"));
 app.use("/api/sensors", require("./routes/sensor.routes"));
-app.use("/api/ai", require("./routes/ai.routes"));
+// app.use("/api/ai", require("./routes/ai.routes"));
 app.use("/api/feed", require("./routes/feed.routes"));
 app.use("/api/aira", require("./routes/aira.routes"));
 app.use("/api/location", require("./routes/location.routes"));
 app.use("/api/ai/insights", require("./routes/insights.routes"));
 app.use("/api/ai", aiRoutes);
+app.use("/api/status", require("./routes/status.routes"));
+
 
 
 
