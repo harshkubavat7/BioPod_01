@@ -1,3 +1,6 @@
+
+
+
 // const Sensor = require("../models/SensorData.model");
 
 // exports.getLatestStatus = async (req, res) => {
@@ -12,7 +15,7 @@
 //       });
 //     }
 
-//     return res.json({
+//     res.json({
 //       device_id: latest.device_id,
 //       temperature: latest.temperature,
 //       humidity: latest.humidity,
@@ -23,15 +26,16 @@
 //       timestamp: latest.createdAt,
 //     });
 //   } catch (err) {
-//     console.error("❌ BIOPOD-1 STATUS ERROR:", err);
-//     return res.status(500).json({
-//       error: "Failed to fetch Biopod-1 status",
+//     console.error("❌ STATUS ERROR:", err);
+//     res.status(500).json({
+//       error: "Failed to fetch status",
 //     });
 //   }
 // };
 
 
 const Sensor = require("../models/SensorData.model");
+const BSFBatch = require("../models/BSFBatch");
 
 exports.getLatestStatus = async (req, res) => {
   try {
@@ -45,6 +49,16 @@ exports.getLatestStatus = async (req, res) => {
       });
     }
 
+    // 🔹 Fetch BSF batch lifecycle info
+    const batch = await BSFBatch.findOne({ device_id: "BSF_001" });
+
+    let age_days = null;
+    if (batch?.started_on) {
+      age_days = Math.floor(
+        (Date.now() - new Date(batch.started_on)) / (1000 * 60 * 60 * 24)
+      );
+    }
+
     res.json({
       device_id: latest.device_id,
       temperature: latest.temperature,
@@ -53,6 +67,7 @@ exports.getLatestStatus = async (req, res) => {
       fan: latest.fan,
       mode: latest.mode,
       sensor_fault: latest.sensor_fault,
+      age_days, // ✅ THIS UNLOCKS AI STAGE PREDICTION
       timestamp: latest.createdAt,
     });
   } catch (err) {

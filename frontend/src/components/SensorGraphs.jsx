@@ -84,10 +84,10 @@ export default function SensorGraphs() {
 
 function Graph({ title, data, keyName, color }) {
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 h-64">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 min-h-[300px]">
       <p className="text-sm text-zinc-400 mb-2">{title}</p>
 
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data}>
           <XAxis dataKey="time" tick={{ fill: "#a1a1aa" }} />
           <YAxis tick={{ fill: "#a1a1aa" }} />
